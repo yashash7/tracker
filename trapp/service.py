@@ -67,14 +67,16 @@ class Adder_Service(Init_DB):
         try:
             with self.get_db() as db:
                 dbo.generic_add(db, entry)
+                db.commit()
                 response = new_item
         except Exception as e:
+            db.rollback()
             raise HTTPException(status_code=500, detail=e.__cause__.__str__())
         return response
     
     def add_burn(self, new_item: models.Burn_Create):
-        total = getattr(new_item, "burn_base_amt")+getattr(new_item, "burn_chrg_amt")
-        setattr(new_item, "burn_total_amt", total)
+        burn_total = getattr(new_item, "burn_base_amt")+getattr(new_item, "burn_chrg_amt")
+        setattr(new_item, "burn_total_amt", burn_total)
         entry = schemas.Burn()
         for key, value in new_item.__dict__.items():
             setattr(entry, key, value)
@@ -83,11 +85,56 @@ class Adder_Service(Init_DB):
             try:
                 with self.get_db() as db:
                     dbo.generic_add(db, entry)
+                    dbo.update_alloc(db, entry)
+                    db.commit()
                     response = new_item
             except Exception as e:
+                db.rollback()
                 raise HTTPException(status_code=500, detail=e.__cause__.__str__())
         else: 
             raise HTTPException(status_code=400, detail="Account - "+ alloc_account+ " does't exist!")
         return response
-
-
+    
+    def add_fss_burn(self, new_item: models.FSS_Burn_Create):
+        entry = schemas.FSS_Burn()
+        for key, value in new_item.__dict__.items():
+            setattr(entry, key, value)
+        try:
+            with self.get_db() as db:
+                dbo.generic_add(db, entry)
+                db.commit()
+                response = new_item
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=e.__cause__.__str__())
+        return response
+    
+    def add_rot_inr_in(self, new_item: models.Rotation_INR_In_Create):
+        entry = schemas.Rotation_INR_In()
+        for key, value in new_item.__dict__.items():
+            setattr(entry, key, value)
+        try:
+            with self.get_db() as db:
+                dbo.generic_add(db, entry)
+                dbo.update_rotation_totals(db, entry)
+                db.commit()
+                response = new_item
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=e.__cause__.__str__())
+        return response
+    
+    def add_rot_usd_in(self, new_item: models.Rotation_USD_In_Create):
+        entry = schemas.Rotation_USD_In()
+        for key, value in new_item.__dict__.items():
+            setattr(entry, key, value)
+        try:
+            with self.get_db() as db:
+                dbo.generic_add(db, entry)
+                dbo.update_rotation_totals(db, entry)
+                db.commit()
+                response = new_item
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=e.__cause__.__str__())
+        return response

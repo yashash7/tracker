@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any
+from sqlalchemy import insert, select
 from . import schemas
 from .exceptions import Filter_Validation_Exception
 
@@ -55,3 +56,24 @@ def validate_filters(filters: Dict[str, Any]):
     else:
         print("All Filters Valid!")
     
+# Insert default row to rotation_totals
+def insert_default_row(target, connection, **kwargs):
+    default_row = {
+        "amt_rotation_id": "amt_rot_default", # Take this (wherever it is referred) from env
+        "inr_in": 0,
+        "inr_out": 0,
+        "usd_in": 0,
+        "usd_out": 0,
+        "inr_rot_bal": 0,
+        "usd_rot_bal": 0
+    }
+    table = schemas.Amt_Rotation_Totals
+    try:
+        exist = connection.execute(select(table).where(table.amt_rotation_id == "amt_rot_default")).fetchone()
+        if exist is None or len(exist)<=0:
+            connection.execute(insert(table).values(default_row))
+            print("Defaults Created!")
+        else:
+            print("Defaults Already Exist, Skipping Defaults!")
+    except Exception as e:
+        print("Defaults Creation Failed, Please Add Manually!")

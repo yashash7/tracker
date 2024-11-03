@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import Union
 from .schemas import *
 
 '''def get_item(db: Session, item_id: int):
@@ -23,6 +24,34 @@ def generic_fetch_by_filters(db: Session, schema, filters):
 def generic_add(db: Session, entry):
     try:
         db.add(entry)
-        db.commit()
     except Exception as e:
         raise e
+
+def update_alloc(db: Session, entry: Burn):
+    try:
+        alloc_account: Alloc = generic_fetch_by_id(db, Alloc, "account", entry.burn_account)
+        if alloc_account:
+            alloc_account.base_amt = alloc_account.base_amt + entry.burn_base_amt
+            alloc_account.chrg_amt = alloc_account.chrg_amt + entry.burn_chrg_amt
+            alloc_account.bal_amt = alloc_account.alloc_amt - (alloc_account.base_amt + alloc_account.chrg_amt)
+    except Exception as e:
+        raise e
+    
+def update_rotation_totals(db: Session, entry: Union[Rotation_INR_In, Rotation_USD_In]):
+    schema = Amt_Rotation_Totals
+    try:
+        if isinstance(entry, Rotation_INR_In):
+            # INRIN-USDOUT
+            rot_totals: Amt_Rotation_Totals = generic_fetch_by_id(db, schema, "amt_rotation_id", "amt_rot_default")
+            rot_totals.inr_in += entry.inr_amt
+            rot_totals.usd_out += entry.usd_amt
+        else:
+            # USDIN-INROUT
+            rot_totals: Amt_Rotation_Totals = generic_fetch_by_id(db, schema, "amt_rotation_id", "amt_rot_default")
+            rot_totals.usd_in += entry.usd_amt
+            rot_totals.inr_out += entry.usd_amt
+        rot_totals.inr_rot_bal = rot_totals.inr_in-rot_totals.inr_out
+        rot_totals.usd_rot_bal = rot_totals.usd_in-rot_totals.usd_out
+    except Exception as e:
+        raise e
+        

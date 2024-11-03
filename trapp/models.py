@@ -25,7 +25,7 @@ class Burn_Base(BaseModel):
     burn_base_amt: Optional[float] = 0
     burn_chrg_amt: Optional[float] = 0
     burn_total_amt: Optional[float] = 0
-    burn_date: str = Field(default_factory = lambda: utils.get_curdate_str("D"))
+    burn_date: Optional[str] = None
     burn_account: str
 
 class Burn_Create(Burn_Base):
@@ -40,9 +40,7 @@ class Burn(Burn_Base):
 class FSS_Burn_Base(BaseModel):
     fss_burn_id: str = Field(default_factory = utils.get_curdate_str)
     fss_burn_title: str
-    fss_burn_base_amt: Optional[float] = 0
-    fss_burn_chrg_amt: Optional[float] = 0
-    fss_burn_total_amt: Optional[float] = 0
+    fss_burn_amt: Optional[float] = 0
     burn_id: str
 
 class FSS_Burn_Create(FSS_Burn_Base):
@@ -54,7 +52,7 @@ class FSS_Burn(FSS_Burn_Base):
 
 
 class Amt_Rotation_Totals_Base(BaseModel):
-    amt_rotation_id: str = Field(default_factory = utils.get_curdate_str)
+    amt_rotation_id: str
     inr_in: Optional[float] = 0
     inr_out: Optional[float] = 0
     usd_in: Optional[float] = 0

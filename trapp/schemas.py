@@ -29,16 +29,14 @@ class FSS_Burn(Base): # Child Table to Burn (for types shop, food, supplies)
     __tablename__ = 'fss_burn_details'
     fss_burn_id = Column(String(14), primary_key = True, index = True)
     fss_burn_title = Column(String(70), index = True)
-    fss_burn_base_amt = Column(Float)
-    fss_burn_chrg_amt = Column(Float)
-    fss_burn_total_amt = Column(Float)
+    fss_burn_amt = Column(Float)
     #Relation
     burn_id = Column(String(14), ForeignKey('burn_details.burn_id'))
     burn = relationship("Burn", back_populates="fss_burns")
 
 class Amt_Rotation_Totals(Base):
     __tablename__ = 'amt_rotation_totals'
-    amt_rotation_id = Column(String(14), primary_key = True, index = True)
+    amt_rotation_id = Column(String(15), primary_key = True, index = True)
     inr_in = Column(Float)
     inr_out = Column(Float)
     usd_in = Column(Float)
