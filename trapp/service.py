@@ -1,10 +1,11 @@
 from contextlib import contextmanager
 from fastapi import HTTPException
+from .commons import schema_type_assoc
 from .dbc import SessionLocal
+from .utils import get_env_var
 from . import dbo
-from . import schemas
 from . import models
-from .utils import schema_type_assoc, schema_id_assoc
+from . import schemas
 
 class Init_DB:
 
@@ -28,11 +29,10 @@ class Fetcher_Service(Init_DB):
     
     def fetch_any_by_id(self, schema_type, id):
         schema = schema_type_assoc.get(schema_type)
-        id_col = schema_id_assoc.get(schema_type)
+        id_col = get_env_var("schema_id_"+schema_type)
         try:
             with self.get_db() as db:
                 response = dbo.generic_fetch_by_id(db, schema, id_col, id)
-                print("YcK: ", response)
         except Exception as e:
             raise HTTPException(status_code=500, detail=e.__cause__.__str__())
         return response
@@ -43,7 +43,6 @@ class Fetcher_Service(Init_DB):
             with self.get_db() as db:
                 response = dbo.generic_fetch_by_filters(db, schema, filters)
         except Exception as e:
-            print("YcKEX: ", e)
             raise HTTPException(status_code=500, detail=e.__cause__.__str__())
         return response
     
@@ -68,7 +67,7 @@ class Adder_Service(Init_DB):
             with self.get_db() as db:
                 dbo.generic_add(db, entry)
                 db.commit()
-                response = new_item
+            response = new_item
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail=e.__cause__.__str__())
@@ -87,7 +86,7 @@ class Adder_Service(Init_DB):
                     dbo.generic_add(db, entry)
                     dbo.update_alloc(db, entry)
                     db.commit()
-                    response = new_item
+                response = new_item
             except Exception as e:
                 db.rollback()
                 raise HTTPException(status_code=500, detail=e.__cause__.__str__())
@@ -103,7 +102,7 @@ class Adder_Service(Init_DB):
             with self.get_db() as db:
                 dbo.generic_add(db, entry)
                 db.commit()
-                response = new_item
+            response = new_item
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail=e.__cause__.__str__())
@@ -118,7 +117,7 @@ class Adder_Service(Init_DB):
                 dbo.generic_add(db, entry)
                 dbo.update_rotation_totals(db, entry)
                 db.commit()
-                response = new_item
+            response = new_item
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail=e.__cause__.__str__())
@@ -133,7 +132,21 @@ class Adder_Service(Init_DB):
                 dbo.generic_add(db, entry)
                 dbo.update_rotation_totals(db, entry)
                 db.commit()
-                response = new_item
+            response = new_item
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=e.__cause__.__str__())
+        return response
+    
+    def add_exchange(self, new_item: models.Cash_Exchange_Create):
+        entry = schemas.Cash_Exchange()
+        for key, value in new_item.__dict__.items():
+            setattr(entry, key, value)
+        try:
+            with self.get_db() as db:
+                dbo.generic_add(db, entry)
+                db.commit()
+            response = new_item
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail=e.__cause__.__str__())

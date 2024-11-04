@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import List, Optional
 from . import utils
-
+from .enums import EXCHANGE
 
 class Alloc_Base(BaseModel):
     account: str
@@ -9,10 +9,8 @@ class Alloc_Base(BaseModel):
     base_amt: Optional[float] = 0
     chrg_amt: Optional[float] = 0
     bal_amt: Optional[float] = 0
-
 class Alloc_Create(Alloc_Base):
     pass
-
 class Alloc(Alloc_Base):
     burns: List['Burn'] = []
     class Config:
@@ -27,10 +25,8 @@ class Burn_Base(BaseModel):
     burn_total_amt: Optional[float] = 0
     burn_date: Optional[str] = None
     burn_account: str
-
 class Burn_Create(Burn_Base):
     pass
-
 class Burn(Burn_Base):
     fss_burns: List['FSS_Burn'] = []
     class Config:
@@ -42,10 +38,8 @@ class FSS_Burn_Base(BaseModel):
     fss_burn_title: str
     fss_burn_amt: Optional[float] = 0
     burn_id: str
-
 class FSS_Burn_Create(FSS_Burn_Base):
     pass
-
 class FSS_Burn(FSS_Burn_Base):
     class Config:
         from_attributes = True
@@ -59,10 +53,8 @@ class Amt_Rotation_Totals_Base(BaseModel):
     usd_out: Optional[float] = 0
     inr_rot_bal: Optional[float] = 0
     usd_rot_bal: Optional[float] = 0
-
 class Amt_Rotation_Totals_Create(Amt_Rotation_Totals_Base):
     pass
-
 class Amt_Rotation_Totals(Amt_Rotation_Totals_Base):
     class Config:
         from_attributes = True
@@ -79,10 +71,8 @@ class Rotation_INR_In_Base(BaseModel):
     settled_day: Optional[str] = None
     usd_out_type: Optional[str] = None
     comments: Optional[str] = None
-
 class Rotation_INR_In_Create(Rotation_INR_In_Base):
     pass
-
 class Rotation_INR_In(Rotation_INR_In_Base):
     class Config:
         from_attributes = True
@@ -99,16 +89,26 @@ class Rotation_USD_In_Base(BaseModel):
     settled_day: Optional[str] = None
     inr_out_type: Optional[str] = None
     comments: Optional[str] = None
-
 class Rotation_USD_In_Create(Rotation_USD_In_Base):
     pass
-
 class Rotation_USD_In(Rotation_USD_In_Base):
     class Config:
         from_attributes = True
 
-class Response_Exception(BaseModel):
-    
-    code: int
-    msg: str
-    desc: Optional[str] = ""
+class Cash_Exchange_Base(BaseModel):
+    exchange_id: str = Field(default_factory = utils.get_curdate_str)
+    to_or_from: str
+    paid_cash_amt: Optional[float] = 0
+    paid_online_amt: Optional[float] = 0
+    got_cash_amt: Optional[float] = 0
+    got_online_amt: Optional[float] = 0
+    exchange_type: EXCHANGE = Field(default_factory = lambda: EXCHANGE.PaidCash)
+    paid_currency: Optional[str] = None
+    got_currency: Optional[str] = None
+    exchange_Date: Optional[str] = None
+    burn_id: Optional[str] = None
+class Cash_Exchange_Create(Cash_Exchange_Base):
+    pass
+class Cash_Exchange(Cash_Exchange_Base):
+    class Config:
+        from_attributes = True

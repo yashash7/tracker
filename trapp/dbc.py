@@ -1,13 +1,14 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from .schemas import Base
+from .utils import get_env_var
 
-DATABASE_URL = "mysql+mysqlconnector://u1iztmftoulf57th:t9g4GtD5iEtSM8JGOVcb@bm4f9lg4nenej6tsgm8t-mysql.services.clever-cloud.com:3306/bm4f9lg4nenej6tsgm8t"
+DATABASE_URL = get_env_var("db_string")
+POOL_SIZE = int(get_env_var("db_connection_pool_size")) | 1
+MAX_OVERFLOW = int(get_env_var("db_connection_max_overflow")) | 0
 
-engine = create_engine(DATABASE_URL, pool_size=4, max_overflow=0)
+engine = create_engine(DATABASE_URL, pool_size=POOL_SIZE, max_overflow=MAX_OVERFLOW)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
 
 def init_db():
     Base.metadata.create_all(bind=engine)

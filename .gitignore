@@ -1,3 +1,4 @@
 tenv/
 __pycache__/
 trapp/__pycache__/
+trapp/.env

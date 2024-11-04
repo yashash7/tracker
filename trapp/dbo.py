@@ -1,15 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Union
 from .schemas import *
-
-'''def get_item(db: Session, item_id: int):
-    return db.query(Item).filter(Item.id == item_id).first()'''
-
-'''def create_item(db: Session, item: Item):
-    db.add(item)
-    db.commit()
-    db.refresh(item)
-    return item'''
+from .utils import get_env_var
 
 def generic_fetch_all(db: Session, schema):
     return db.query(schema).all()
@@ -29,7 +21,7 @@ def generic_add(db: Session, entry):
 
 def update_alloc(db: Session, entry: Burn):
     try:
-        alloc_account: Alloc = generic_fetch_by_id(db, Alloc, "account", entry.burn_account)
+        alloc_account: Alloc = generic_fetch_by_id(db, Alloc, get_env_var("schema_id_alloc"), entry.burn_account)
         if alloc_account:
             alloc_account.base_amt = alloc_account.base_amt + entry.burn_base_amt
             alloc_account.chrg_amt = alloc_account.chrg_amt + entry.burn_chrg_amt
@@ -40,14 +32,13 @@ def update_alloc(db: Session, entry: Burn):
 def update_rotation_totals(db: Session, entry: Union[Rotation_INR_In, Rotation_USD_In]):
     schema = Amt_Rotation_Totals
     try:
+        rot_totals: Amt_Rotation_Totals = generic_fetch_by_id(db, schema, get_env_var("schema_id_rotation_totals"), get_env_var("def_rot_tot_id"))
         if isinstance(entry, Rotation_INR_In):
             # INRIN-USDOUT
-            rot_totals: Amt_Rotation_Totals = generic_fetch_by_id(db, schema, "amt_rotation_id", "amt_rot_default")
             rot_totals.inr_in += entry.inr_amt
             rot_totals.usd_out += entry.usd_amt
         else:
             # USDIN-INROUT
-            rot_totals: Amt_Rotation_Totals = generic_fetch_by_id(db, schema, "amt_rotation_id", "amt_rot_default")
             rot_totals.usd_in += entry.usd_amt
             rot_totals.inr_out += entry.usd_amt
         rot_totals.inr_rot_bal = rot_totals.inr_in-rot_totals.inr_out

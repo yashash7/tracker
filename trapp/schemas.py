@@ -1,6 +1,9 @@
-from sqlalchemy import Column, String, Float, ForeignKey
+from sqlalchemy import Column, Enum, Float, ForeignKey, String
 from sqlalchemy.orm import relationship
-from .dbc import Base
+from sqlalchemy.ext.declarative import declarative_base
+from .enums import EXCHANGE
+
+Base = declarative_base()
 
 class Alloc(Base):
     __tablename__ = 'total_allocs'
@@ -71,3 +74,16 @@ class Rotation_USD_In(Base):
     inr_out_type = Column(String(25), index = True)
     comments = Column(String(250))
 
+class Cash_Exchange(Base):
+    __tablename__ = "cash_exchange"
+    exchange_id = Column(String(14), primary_key = True, index = True)
+    to_or_from = Column(String(50), index = True)
+    paid_cash_amt = Column(Float)
+    paid_online_amt = Column(Float)
+    got_cash_amt = Column(Float)
+    got_online_amt = Column(Float)
+    exchange_type = Column(Enum(EXCHANGE), index = True)
+    paid_currency = Column(String(10), index = True)
+    got_currency = Column(String(10), index = True)
+    exchange_Date = Column(String(14), index = True)
+    burn_id = Column(String(14), index = True)
