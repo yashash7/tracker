@@ -5,6 +5,12 @@ from .enums import EXCHANGE
 
 Base = declarative_base()
 
+class User(Base):
+    __tablename__ = "users"
+    id = Column(String(14), primary_key=True, index=True)
+    username = Column(String(25), unique=True, index=True)
+    password = Column(String(700))
+
 class Alloc(Base):
     __tablename__ = 'total_allocs'
     account = Column(String(7), primary_key = True, index = True)

@@ -1,8 +1,9 @@
 from contextlib import contextmanager
 from fastapi import HTTPException
+from .auth import create_access_token, verify_psd
 from .commons import schema_type_assoc
 from .dbc import SessionLocal
-from .utils import get_env_var
+from .utils import get_env_var, processb64
 from . import dbo
 from . import models
 from . import schemas
@@ -16,6 +17,22 @@ class Init_DB:
             yield db
         finally:
             db.close()
+            
+class Auth_Service(Init_DB):
+    
+    def validate_login(self, user: models.User_Login):
+        if not user.username or not user.password:
+            raise HTTPException(status_code=400, detail="Both Username and Password are Required!")
+        try:
+            with self.get_db() as db:
+                db_user = dbo.get_user(db, processb64(user.username))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=e.__cause__.__str__())
+        # Validate
+        if not db_user or not verify_psd(processb64(user.password), db_user.password):
+            raise HTTPException(status_code=401, detail="Invalid credentials!")
+        token = create_access_token(data={"subject": db_user.username})
+        return models.Token(access_token=token, token_type="bearer")
 
 class Fetcher_Service(Init_DB):
 
@@ -24,7 +41,7 @@ class Fetcher_Service(Init_DB):
             with self.get_db() as db:
                 response = dbo.generic_fetch_all(db, schema_type_assoc.get(schema_type))
         except Exception as e:
-            response = HTTPException(status_code=500, detail=e.__cause__.__str__())
+            raise HTTPException(status_code=500, detail=e.__cause__.__str__())
         return response
     
     def fetch_any_by_id(self, schema_type, id):

@@ -1,8 +1,9 @@
+from base64 import b64encode, b64decode
 from datetime import datetime
 import json
 import os
 from sqlalchemy import insert, select
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from .exceptions import Filter_Validation_Exception
 from . import schemas
 
@@ -53,8 +54,12 @@ def insert_default_row(target, connection, **kwargs):
         print("Defaults Creation Failed, Please Add Manually!")
         
 # ENV Getter
-def get_env_var(env_key):
-    if not os.getenv("DEPENV"):
-        from dotenv import load_dotenv
-        load_dotenv()
-    return os.getenv(env_key)
+def get_env_var(env_key: str, default: str = None) -> str:
+    value = os.getenv(env_key, default)
+    if value is None:
+        raise ValueError(f"{env_key} not set!")
+    return value
+
+# Base64 Encoder/Decoder
+def processb64(text: str, action: Optional[str] = "decode", charset: Optional[str] = get_env_var("default_charset")):
+    return b64encode(text.encode(charset)) if action == "encode" else b64decode(text).decode(charset)

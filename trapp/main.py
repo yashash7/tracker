@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Request
-from fastapi.openapi.docs import get_swagger_ui_html
+from .auth import Interceptor, verify_access_token
+from fastapi import Depends, FastAPI, Request as fapi_request
 from fastapi.responses import JSONResponse
 from sqlalchemy import event
 from typing import Any, Dict, List, Union
@@ -7,21 +7,36 @@ from .commons import response_models
 from .dbc import init_db
 from .exceptions import Filter_Validation_Exception
 from .schemas import Amt_Rotation_Totals
-from .service import Fetcher_Service, Adder_Service
-from .utils import insert_default_row, get_env_var, validate_filters
+from .service import Adder_Service, Auth_Service, Fetcher_Service
+from .utils import get_env_var, insert_default_row, validate_filters
 from . import models
 
-app = FastAPI(title="TrApp")
+app_name = get_env_var("app_title", "TrApp")
+
+app = FastAPI(title=app_name)
 
 app.add_event_handler("startup", init_db)
+
+app.add_middleware(Interceptor)
 
 # Initialize Services
 fetcher = Fetcher_Service()
 adder = Adder_Service()
+auth = Auth_Service()
 
-@app.get("/", include_in_schema=False)
+@app.get("/")
 async def home():
-    return get_swagger_ui_html(openapi_url=app.openapi_url, title=get_env_var("home_page_title"))
+    return "Welcome to YcK's TrApp, for more information, please contact YcK - yck@svarpy.org"
+
+# Login
+@app.post("/login", response_model=models.Token)
+async def login(user: models.User_Login):
+    return auth.validate_login(user)
+
+# Ping for client
+@app.get("/ping")
+async def ping(token: str = Depends(verify_access_token)):
+    return -1 if not token else 1
 
 @app.get("/getalls", response_model = List[Union[response_models]])
 async def get_all_by_schema(schema_type):
@@ -63,7 +78,7 @@ async def add_new_exchange(exchange: models.Cash_Exchange_Create):
 
 # Exception Handlers
 @app.exception_handler(Filter_Validation_Exception)
-async def handle_filter_validation_exception(req: Request, e: Filter_Validation_Exception):
+async def handle_filter_validation_exception(req: fapi_request, e: Filter_Validation_Exception):
     return JSONResponse(
         status_code=400,
         content=e.__dict__

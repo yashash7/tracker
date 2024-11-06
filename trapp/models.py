@@ -1,7 +1,25 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from . import utils
 from .enums import EXCHANGE
+from .utils import get_curdate_str
+
+class User_Base(BaseModel):
+    id: str = Field(default_factory = get_curdate_str)
+    username: str
+    password: str
+class User_Create(User_Base):
+    pass
+class User(User_Base):
+    username: str
+    class config:
+        from_attributes = True
+class User_Login(BaseModel):
+    username: str
+    password: str
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
 
 class Alloc_Base(BaseModel):
     account: str
@@ -18,7 +36,7 @@ class Alloc(Alloc_Base):
 
 
 class Burn_Base(BaseModel):
-    burn_id: str = Field(default_factory = utils.get_curdate_str)
+    burn_id: str = Field(default_factory = get_curdate_str)
     burn_title: str
     burn_base_amt: Optional[float] = 0
     burn_chrg_amt: Optional[float] = 0
@@ -34,7 +52,7 @@ class Burn(Burn_Base):
 
 
 class FSS_Burn_Base(BaseModel):
-    fss_burn_id: str = Field(default_factory = utils.get_curdate_str)
+    fss_burn_id: str = Field(default_factory = get_curdate_str)
     fss_burn_title: str
     fss_burn_amt: Optional[float] = 0
     burn_id: str
@@ -61,7 +79,7 @@ class Amt_Rotation_Totals(Amt_Rotation_Totals_Base):
 
 
 class Rotation_INR_In_Base(BaseModel):
-    inr_rotation_id: str = Field(default_factory = utils.get_curdate_str)
+    inr_rotation_id: str = Field(default_factory = get_curdate_str)
     usd_out_to: str
     usd_amt: Optional[float] = 0
     inr_amt: Optional[float] = 0
@@ -79,7 +97,7 @@ class Rotation_INR_In(Rotation_INR_In_Base):
 
 
 class Rotation_USD_In_Base(BaseModel):
-    usd_rotation_id: str = Field(default_factory = utils.get_curdate_str)
+    usd_rotation_id: str = Field(default_factory = get_curdate_str)
     inr_out_to: str
     usd_amt: Optional[float] = 0
     inr_amt: Optional[float] = 0
@@ -96,7 +114,7 @@ class Rotation_USD_In(Rotation_USD_In_Base):
         from_attributes = True
 
 class Cash_Exchange_Base(BaseModel):
-    exchange_id: str = Field(default_factory = utils.get_curdate_str)
+    exchange_id: str = Field(default_factory = get_curdate_str)
     to_or_from: str
     paid_cash_amt: Optional[float] = 0
     paid_online_amt: Optional[float] = 0

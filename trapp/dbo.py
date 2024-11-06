@@ -3,6 +3,9 @@ from typing import Union
 from .schemas import *
 from .utils import get_env_var
 
+def get_user(db: Session, username: str):
+    return db.query(User).filter(User.username == username).first()
+
 def generic_fetch_all(db: Session, schema):
     return db.query(schema).all()
 
